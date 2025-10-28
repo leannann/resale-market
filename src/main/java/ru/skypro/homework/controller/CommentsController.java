@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.skypro.homework.dto.Comment;
+import ru.skypro.homework.dto.CommentDto;
 import ru.skypro.homework.dto.Comments;
 import ru.skypro.homework.dto.CreateOrUpdateComment;
 
@@ -26,10 +26,10 @@ public class CommentsController {
     }
 
     @PostMapping("/ads/{id}/comments")
-    public ResponseEntity<Comment> addComment(@PathVariable("id") Integer adId,
-                                              @RequestBody CreateOrUpdateComment request) {
+    public ResponseEntity<CommentDto> addComment(@PathVariable("id") Integer adId,
+                                                 @RequestBody CreateOrUpdateComment request) {
         log.info("POST /ads/{}/comments body={}", adId, request);
-        return ResponseEntity.ok(new Comment()); // по OAS 200 OK + Comment
+        return ResponseEntity.ok(new CommentDto()); // по OAS 200 OK + Comment
     }
 
     @DeleteMapping("/ads/{adId}/comments/{commentId}")
@@ -40,10 +40,10 @@ public class CommentsController {
     }
 
     @PatchMapping("/ads/{adId}/comments/{commentId}")
-    public ResponseEntity<Comment> updateComment(@PathVariable Integer adId,
+    public ResponseEntity<CommentDto> updateComment(@PathVariable Integer adId,
                                                  @PathVariable Integer commentId,
                                                  @RequestBody CreateOrUpdateComment request) {
         log.info("PATCH /ads/{}/comments/{} body={}", adId, commentId, request);
-        return ResponseEntity.ok(new Comment());
+        return ResponseEntity.ok(new CommentDto());
     }
 }

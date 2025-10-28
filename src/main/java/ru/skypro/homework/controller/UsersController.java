@@ -2,14 +2,13 @@ package ru.skypro.homework.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ru.skypro.homework.dto.NewPassword;
 import ru.skypro.homework.dto.UpdateUser;
-import ru.skypro.homework.dto.User;
+import ru.skypro.homework.dto.UserDto;
 
 @Slf4j
 @CrossOrigin(value = "http://localhost:3000")
@@ -25,9 +24,9 @@ public class UsersController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<User> getUser() {
+    public ResponseEntity<UserDto> getUser() {
         log.info("Get current user info");
-        return ResponseEntity.ok(new User());
+        return ResponseEntity.ok(new UserDto());
     }
 
     @PatchMapping("/me")

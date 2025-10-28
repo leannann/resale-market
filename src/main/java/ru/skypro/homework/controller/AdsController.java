@@ -28,13 +28,13 @@ public class AdsController {
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Ad> addAd(@RequestPart("properties") CreateOrUpdateAd properties,
+    public ResponseEntity<AdDto> addAd(@RequestPart("properties") CreateOrUpdateAd properties,
                                     @RequestPart("image") MultipartFile image) {
         log.info("POST /ads (multipart) title={}, image={}", properties != null ? properties.getTitle() : null,
                 image != null ? image.getOriginalFilename() : null);
 
-        Ad ad = new Ad(); // заглушка
-        ad.setPk(0);
+        AdDto ad = new AdDto(); // заглушка
+        ad.setId(0);
         ad.setTitle(properties != null ? properties.getTitle() : null);
         ad.setPrice(properties != null ? properties.getPrice() : null);
         return ResponseEntity.status(HttpStatus.CREATED).body(ad);
@@ -53,10 +53,10 @@ public class AdsController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Ad> updateAds(@PathVariable Integer id,
+    public ResponseEntity<AdDto> updateAds(@PathVariable Integer id,
                                         @RequestBody CreateOrUpdateAd request) {
         log.info("PATCH /ads/{} body={}", id, request);
-        return ResponseEntity.ok(new Ad()); // пустой объект
+        return ResponseEntity.ok(new AdDto()); // пустой объект
     }
 
     @GetMapping("/me")
