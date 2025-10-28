@@ -1,29 +1,27 @@
 package ru.skypro.homework.config;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
-import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
-import io.swagger.v3.oas.annotations.info.Contact;
 import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.servers.Server;
-import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @OpenAPIDefinition(
         info = @Info(
                 title = "Resale Market API",
-                version = "1.0",
-                description = "Бэкенд платформы перепродажи вещей (этап 1 — DTO и контроллеры).",
-                contact = @Contact(name = "Team JavaWave", email = "team@resalemarket.dev")
+                version = "1.0.0",
+                description = "Документация REST API для сервиса перепродажи товаров"
         ),
         servers = {
-                @Server(url = "http://localhost:8080", description = "Local Development Server")
+                @Server(url = "http://localhost:8080", description = "Local Dev")
+        },
+        tags = {
+                @Tag(name = "Авторизация и регистрация", description = "Методы для входа и регистрации пользователей"),
+                @Tag(name = "Комментарии", description = "Методы для работы с комментариями к объявлениям"),
+                @Tag(name = "Объявления", description = "CRUD-операции и работа с изображениями объявлений"),
+                // ⬇️ ДОБАВЛЯЕМ ЭТО
+                @Tag(name = "Пользователи", description = "Операции с профилем авторизованного пользователя")
         }
 )
-@SecurityScheme(
-        name = "basicAuth",
-        type = SecuritySchemeType.HTTP,
-        scheme = "basic"
-)
-public class OpenApiConfig {
-}
+public class OpenApiConfig { }
