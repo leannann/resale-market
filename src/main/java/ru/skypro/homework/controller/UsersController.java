@@ -6,8 +6,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import ru.skypro.homework.dto.NewPassword;
-import ru.skypro.homework.dto.UpdateUser;
+import ru.skypro.homework.dto.NewPasswordDto;
+import ru.skypro.homework.dto.UpdateUserDto;
 import ru.skypro.homework.dto.UserDto;
 
 @Slf4j
@@ -18,7 +18,7 @@ import ru.skypro.homework.dto.UserDto;
 public class UsersController {
 
     @PostMapping("/set_password")
-    public ResponseEntity<Void> setPassword(@RequestBody NewPassword newPassword) {
+    public ResponseEntity<Void> setPassword(@RequestBody NewPasswordDto newPassword) {
         log.info("Password update requested: {}", newPassword);
         return ResponseEntity.ok().build(); // заглушка
     }
@@ -30,9 +30,9 @@ public class UsersController {
     }
 
     @PatchMapping("/me")
-    public ResponseEntity<UpdateUser> updateUser(@RequestBody UpdateUser updateUser) {
+    public ResponseEntity<UpdateUserDto> updateUser(@RequestBody UpdateUserDto updateUser) {
         log.info("Update current user data: {}", updateUser);
-        return ResponseEntity.ok(updateUser != null ? updateUser : new UpdateUser());
+        return ResponseEntity.ok(updateUser != null ? updateUser : new UpdateUserDto());
     }
 
     @PatchMapping(value = "/me/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

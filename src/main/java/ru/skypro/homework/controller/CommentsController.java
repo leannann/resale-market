@@ -5,8 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.skypro.homework.dto.CommentDto;
-import ru.skypro.homework.dto.Comments;
-import ru.skypro.homework.dto.CreateOrUpdateComment;
+import ru.skypro.homework.dto.CommentsDto;
+import ru.skypro.homework.dto.CreateOrUpdateCommentDto;
 
 import java.util.Collections;
 
@@ -17,9 +17,9 @@ import java.util.Collections;
 public class CommentsController {
 
     @GetMapping("/ads/{id}/comments")
-    public ResponseEntity<Comments> getComments(@PathVariable("id") Integer adId) {
+    public ResponseEntity<CommentsDto> getComments(@PathVariable("id") Integer adId) {
         log.info("GET /ads/{}/comments", adId);
-        Comments body = new Comments();
+        CommentsDto body = new CommentsDto();
         body.setCount(0);
         body.setResults(Collections.emptyList());
         return ResponseEntity.ok(body);
@@ -27,7 +27,7 @@ public class CommentsController {
 
     @PostMapping("/ads/{id}/comments")
     public ResponseEntity<CommentDto> addComment(@PathVariable("id") Integer adId,
-                                                 @RequestBody CreateOrUpdateComment request) {
+                                                 @RequestBody CreateOrUpdateCommentDto request) {
         log.info("POST /ads/{}/comments body={}", adId, request);
         return ResponseEntity.ok(new CommentDto()); // по OAS 200 OK + Comment
     }
@@ -42,7 +42,7 @@ public class CommentsController {
     @PatchMapping("/ads/{adId}/comments/{commentId}")
     public ResponseEntity<CommentDto> updateComment(@PathVariable Integer adId,
                                                  @PathVariable Integer commentId,
-                                                 @RequestBody CreateOrUpdateComment request) {
+                                                 @RequestBody CreateOrUpdateCommentDto request) {
         log.info("PATCH /ads/{}/comments/{} body={}", adId, commentId, request);
         return ResponseEntity.ok(new CommentDto());
     }

@@ -19,16 +19,16 @@ import java.util.Collections;
 public class AdsController {
 
     @GetMapping
-    public ResponseEntity<Ads> getAllAds() {
+    public ResponseEntity<AdsDto> getAllAds() {
         log.info("GET /ads");
-        Ads body = new Ads();
+        AdsDto body = new AdsDto();
         body.setCount(0);
         body.setResults(Collections.emptyList());
         return ResponseEntity.ok(body);
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<AdDto> addAd(@RequestPart("properties") CreateOrUpdateAd properties,
+    public ResponseEntity<AdDto> addAd(@RequestPart("properties") CreateOrUpdateAdDto properties,
                                     @RequestPart("image") MultipartFile image) {
         log.info("POST /ads (multipart) title={}, image={}", properties != null ? properties.getTitle() : null,
                 image != null ? image.getOriginalFilename() : null);
@@ -41,9 +41,9 @@ public class AdsController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ExtendedAd> getAds(@PathVariable Integer id) {
+    public ResponseEntity<ExtendedAdDto> getAds(@PathVariable Integer id) {
         log.info("GET /ads/{}", id);
-        return ResponseEntity.ok(new ExtendedAd()); // пустой объект
+        return ResponseEntity.ok(new ExtendedAdDto()); // пустой объект
     }
 
     @DeleteMapping("/{id}")
@@ -54,15 +54,15 @@ public class AdsController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<AdDto> updateAds(@PathVariable Integer id,
-                                        @RequestBody CreateOrUpdateAd request) {
+                                        @RequestBody CreateOrUpdateAdDto request) {
         log.info("PATCH /ads/{} body={}", id, request);
         return ResponseEntity.ok(new AdDto()); // пустой объект
     }
 
     @GetMapping("/me")
-    public ResponseEntity<Ads> getAdsMe() {
+    public ResponseEntity<AdsDto> getAdsMe() {
         log.info("GET /ads/me");
-        Ads body = new Ads();
+        AdsDto body = new AdsDto();
         body.setCount(0);
         body.setResults(Collections.emptyList());
         return ResponseEntity.ok(body);
