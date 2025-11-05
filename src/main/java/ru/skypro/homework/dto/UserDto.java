@@ -33,5 +33,5 @@ public class UserDto {
 
     @JsonProperty("image")
     @Schema(description = "Ссылка на аватар пользователя", example = "/images/avatars/12.jpg")
-    private String avatarUrl;
+    private String image;
 }

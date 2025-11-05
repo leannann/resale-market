@@ -8,7 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.skypro.homework.dto.LoginDto;
 import ru.skypro.homework.dto.RegisterDto;
-import ru.skypro.homework.service.AuthService;
+import ru.skypro.homework.service.auth.AuthService;
 
 import javax.annotation.Resource;
 
