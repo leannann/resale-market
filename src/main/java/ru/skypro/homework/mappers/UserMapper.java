@@ -1,0 +1,17 @@
+package ru.skypro.homework.mappers;
+
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import ru.skypro.homework.dto.UserDto;
+import ru.skypro.homework.entity.User;
+
+@Mapper(componentModel = "spring")
+public interface UserMapper {
+    UserDto userToUserDto(User user);
+
+
+    @Mapping(target = "password", ignore = true)
+    @Mapping(target = "ads", ignore = true)
+    @Mapping(target = "comments", ignore = true)
+    User userDtoToUser(UserDto userDto);
+}
