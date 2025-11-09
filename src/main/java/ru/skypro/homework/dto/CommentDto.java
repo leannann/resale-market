@@ -30,4 +30,8 @@ public class CommentDto {
     @JsonProperty("text")
     @Schema(description = "Текст комментария", example = "Отличное состояние!", minLength = 8, maxLength = 64)
     private String text;
+
+    @JsonProperty("ad")
+    @Schema(description = "ID объявления", example = "101")
+    private Integer adId;
 }
