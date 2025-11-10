@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.skypro.homework.dto.UserDto;
 import ru.skypro.homework.entity.User;
@@ -38,6 +37,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto createUser(UserDto userDto) {
         User user = userMapper.userDtoToUser(userDto);
+        user.setPassword(user.getPassword());
         User savedUser = userRepository.save(user);
         return userMapper.userToUserDto(savedUser);
     }
