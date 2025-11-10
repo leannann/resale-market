@@ -26,6 +26,13 @@ public class AdServiceImpl implements AdService {
     }
 
     @Override
+    public boolean isOwner(Integer adId, String userEmail) {
+        return adRepository.findById(adId)
+                .map(ad -> ad.getAuthor().getEmail().equals(userEmail))
+                .orElse(false);
+    }
+
+    @Override
     public List<AdDto> getAllAds() {
         return adRepository.findAll().stream()
                 .map(adMapper::adToAdDto)
