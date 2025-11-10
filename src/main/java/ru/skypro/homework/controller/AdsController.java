@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ru.skypro.homework.dto.*;
@@ -58,6 +59,7 @@ public class AdsController {
             }
     )
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<AdDto> addAd(
             @Parameter(description = "Параметры объявления (JSON)") @RequestPart("properties") CreateOrUpdateAdDto properties,
             @Parameter(description = "Изображение объявления (файл)") @RequestPart("image") MultipartFile image
@@ -98,6 +100,7 @@ public class AdsController {
             }
     )
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or @adService.isOwner(#id, authentication.name)")
     public ResponseEntity<Void> removeAd(
             @Parameter(description = "ID объявления") @PathVariable Integer id) {
         log.info("DELETE /ads/{}", id);

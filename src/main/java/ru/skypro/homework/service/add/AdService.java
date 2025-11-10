@@ -5,6 +5,8 @@ import ru.skypro.homework.dto.AdDto;
 import java.util.List;
 
 public interface AdService {
+    boolean isOwner(Integer adId, String userEmail);
+
     List<AdDto> getAllAds();
 
     AdDto getAdById(Integer id);
