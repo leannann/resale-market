@@ -9,15 +9,15 @@ import lombok.Data;
 public class AdDto {
     @JsonProperty("author")
     @Schema(description = "ID автора объявления", example = "12")
-    private Integer authorId;
+    private Integer author;
 
     @JsonProperty("image")
     @Schema(description = "Ссылка на картинку объявления", example = "/images/ads/12.jpg")
-    private String imageUrl;
+    private String image;
 
     @JsonProperty("pk")
     @Schema(description = "ID объявления", example = "101")
-    private Integer id;
+    private Integer pk;
 
     @JsonProperty("price")
     @Schema(description = "Цена объявления", example = "15000", minimum = "0", maximum = "10000000")
