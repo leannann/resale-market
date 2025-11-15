@@ -29,8 +29,8 @@ public class Comment {
     @Column(name = "text", nullable = false, length = 255)
     private String text;
 
-    @Column(name = "created_at", nullable = false)
-    private Long createdAtEpochMillis;
+    @Column(name = "createdAt", nullable = false)
+    private Long createdAt;
 
     public Integer getId() {
         return id;
@@ -48,8 +48,8 @@ public class Comment {
         return text;
     }
 
-    public Long getCreatedAtEpochMillis() {
-        return createdAtEpochMillis;
+    public Long getCreatedAt() {
+        return createdAt;
     }
 
     public void setId(Integer id) {
@@ -68,8 +68,8 @@ public class Comment {
         this.text = text;
     }
 
-    public void setCreatedAtEpochMillis(Long createdAtEpochMillis) {
-        this.createdAtEpochMillis = createdAtEpochMillis;
+    public void setCreatedAt(Long createdAt) {
+        this.createdAt = createdAt;
     }
 }
 

@@ -10,12 +10,15 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import ru.skypro.homework.dto.CommentDto;
 import ru.skypro.homework.dto.CommentsDto;
 import ru.skypro.homework.dto.CreateOrUpdateCommentDto;
+import ru.skypro.homework.service.comment.CommentService;
 
-import java.util.Collections;
+import java.util.List;
 
 @Slf4j
 @CrossOrigin(value = "http://localhost:3000")
@@ -23,6 +26,7 @@ import java.util.Collections;
 @RequiredArgsConstructor
 @Tag(name = "Комментарии", description = "Методы для работы с комментариями к объявлениям")
 public class CommentsController {
+    private final CommentService commentService;
 
     @Operation(
             summary = "Получение комментариев объявления",
@@ -36,11 +40,15 @@ public class CommentsController {
     @GetMapping("/ads/{id}/comments")
     public ResponseEntity<CommentsDto> getComments(
             @Parameter(description = "ID объявления") @PathVariable("id") Integer adId) {
-        log.info("GET /ads/{}/comments", adId);
-        CommentsDto body = new CommentsDto();
-        body.setCount(0);
-        body.setResults(Collections.emptyList());
-        return ResponseEntity.ok(body);
+        log.info("GET /ads/{}/comments - получение комментариев", adId);
+
+        List<CommentDto> comments = commentService.getCommentsByAdId(adId);
+
+        CommentsDto response = new CommentsDto();
+        response.setCount(comments.size());
+        response.setResults(comments);
+
+        return ResponseEntity.ok(response);
     }
 
     @Operation(
@@ -61,9 +69,15 @@ public class CommentsController {
     @PostMapping("/ads/{id}/comments")
     public ResponseEntity<CommentDto> addComment(
             @Parameter(description = "ID объявления") @PathVariable("id") Integer adId,
-            @org.springframework.web.bind.annotation.RequestBody CreateOrUpdateCommentDto request) {
-        log.info("POST /ads/{}/comments body={}", adId, request);
-        return ResponseEntity.ok(new CommentDto());
+            @org.springframework.web.bind.annotation.RequestBody CreateOrUpdateCommentDto request, Authentication authentication) {
+
+
+        String username = (authentication != null) ? authentication.getName() : null;
+        log.info("POST /ads/{}/comments - добавление комментария пользователем: {}", adId, username);
+
+        CommentDto comment = commentService.addComment(adId, request, username);
+
+        return ResponseEntity.ok(comment);
     }
 
     @Operation(
@@ -76,10 +90,15 @@ public class CommentsController {
             }
     )
     @DeleteMapping("/ads/{adId}/comments/{commentId}")
+    @PreAuthorize("hasRole('ADMIN') or @commentService.isCommentAuthor(#commentId, authentication.name)")
     public ResponseEntity<Void> deleteComment(
             @Parameter(description = "ID объявления") @PathVariable Integer adId,
-            @Parameter(description = "ID комментария") @PathVariable Integer commentId) {
-        log.info("DELETE /ads/{}/comments/{}", adId, commentId);
+            @Parameter(description = "ID комментария") @PathVariable Integer commentId,
+            Authentication authentication) {
+        log.info("DELETE /ads/{}/comments/{} - удаление комментария пользователем: {}", adId, commentId, authentication.getName());
+
+        commentService.deleteComment(commentId, authentication.getName());
+
         return ResponseEntity.ok().build();
     }
 
@@ -99,11 +118,16 @@ public class CommentsController {
             }
     )
     @PatchMapping("/ads/{adId}/comments/{commentId}")
+    @PreAuthorize("hasRole('ADMIN') or @commentService.isCommentAuthor(#commentId, authentication.name)")
     public ResponseEntity<CommentDto> updateComment(
             @Parameter(description = "ID объявления") @PathVariable Integer adId,
             @Parameter(description = "ID комментария") @PathVariable Integer commentId,
-            @org.springframework.web.bind.annotation.RequestBody CreateOrUpdateCommentDto request) {
-        log.info("PATCH /ads/{}/comments/{} body={}", adId, commentId, request);
-        return ResponseEntity.ok(new CommentDto());
+            @org.springframework.web.bind.annotation.RequestBody CreateOrUpdateCommentDto request,
+            Authentication authentication) {
+        log.info("PATCH /ads/{}/comments/{} - обновление комментария пользователем: {}", adId, commentId, authentication.getName());
+
+        CommentDto updatedComment = commentService.updateComment(commentId, request, authentication.getName());
+
+        return ResponseEntity.ok(updatedComment);
     }
 }

@@ -1,5 +1,6 @@
 package ru.skypro.homework.entity;
 
+
 import ru.skypro.homework.dto.Role;
 
 import javax.persistence.Column;
@@ -40,14 +41,32 @@ public class User {
     @Column(length = 255)
     private String image;
 
-    @Column(length = 30)
+    @Column(length = 255)
     private String password;
+
+    @Column(name = "enabled")
+    private Boolean enabled = true;
 
     @OneToMany(mappedBy = "author", fetch = FetchType.LAZY)
     private List<Ad> ads;
 
     @OneToMany(mappedBy = "author", fetch = FetchType.LAZY)
     private List<Comment> comments;
+
+    public User() {
+
+    }
+
+    public User(String email, String firstName, String lastName, String phone, Role role, String image, String password, Boolean enabled) {
+        this.email = email;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.phone = phone;
+        this.role = role;
+        this.image = image;
+        this.password = password;
+        this.enabled = enabled;
+    }
 
     public Integer getId() {
         return id;
@@ -89,6 +108,10 @@ public class User {
         return comments;
     }
 
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
     public void setId(Integer id) {
         this.id = id;
     }
@@ -127,5 +150,9 @@ public class User {
 
     public void setComments(List<Comment> comments) {
         this.comments = comments;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
     }
 }

@@ -17,10 +17,10 @@ import org.springframework.context.annotation.Configuration;
                 @Server(url = "http://localhost:8080", description = "Local Dev")
         },
         tags = {
-                @Tag(name = "Авторизация и регистрация", description = "Методы для входа и регистрации пользователей"),
+                @Tag(name = "Регистрация", description = "Метод для регистрации пользователей"),
+                @Tag(name = "Авторизация", description = "Метод для входа пользователей в систему"),
                 @Tag(name = "Комментарии", description = "Методы для работы с комментариями к объявлениям"),
                 @Tag(name = "Объявления", description = "CRUD-операции и работа с изображениями объявлений"),
-                // ⬇️ ДОБАВЛЯЕМ ЭТО
                 @Tag(name = "Пользователи", description = "Операции с профилем авторизованного пользователя")
         }
 )

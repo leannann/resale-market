@@ -12,17 +12,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.skypro.homework.dto.LoginDto;
-import ru.skypro.homework.dto.RegisterDto;
 import ru.skypro.homework.service.auth.AuthService;
 
 @Slf4j
 @CrossOrigin(value = "http://localhost:3000")
 @RestController
 @RequiredArgsConstructor
-@Tag(name = "Авторизация и регистрация", description = "Методы для входа и регистрации пользователей")
+@Tag(name = "Авторизация", description = "Метод для входа  пользователей в систему")
 public class AuthController {
 
     private final AuthService authService;
+
 
     @Operation(
             summary = "Авторизация пользователя",
@@ -39,32 +39,14 @@ public class AuthController {
     )
     @PostMapping("/login")
     public ResponseEntity<Void> login(@org.springframework.web.bind.annotation.RequestBody LoginDto login) {
+        log.info("Попытка входа в систему: username={}", login.getUsername());
+
         if (authService.login(login.getUsername(), login.getPassword())) {
+            log.info("Вход в систему прошел успешно: username={}", login.getUsername());
             return ResponseEntity.ok().build();
         } else {
+            log.warn("Ошибка входа в систему: username={} (invalid credentials)", login.getUsername());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-    }
-
-    @Operation(
-            summary = "Регистрация нового пользователя",
-            description = "Создает нового пользователя. Возвращает 201 при успешной регистрации, 400 — при ошибке.",
-            requestBody = @RequestBody(
-                    description = "Данные для регистрации нового пользователя",
-                    required = true,
-                    content = @Content(schema = @Schema(implementation = RegisterDto.class))
-            ),
-            responses = {
-                    @ApiResponse(responseCode = "201", description = "Пользователь успешно зарегистрирован"),
-                    @ApiResponse(responseCode = "400", description = "Некорректные данные регистрации")
-            }
-    )
-    @PostMapping("/register")
-    public ResponseEntity<Void> register(@org.springframework.web.bind.annotation.RequestBody RegisterDto register) {
-        if (authService.register(register)) {
-            return ResponseEntity.status(HttpStatus.CREATED).build();
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 }
