@@ -106,6 +106,12 @@ public class UserServiceImpl implements UserService {
                     return new ResponseStatusException(HttpStatus.NOT_FOUND, "Пользователь не найден");
                 });
 
+        // Проверка текущего пароля
+        if (newPassword.getCurrentPassword() != null && !newPassword.getCurrentPassword().isEmpty()) {
+            if (!passwordEncoder.matches(newPassword.getCurrentPassword(), user.getPassword())) {
+                log.warn("Неверный текущий пароль для пользователя: {}", email);
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Неверный текущий пароль");
+            }
         if (!passwordEncoder.matches(newPassword.getCurrentPassword(), user.getPassword())) {
             log.warn("Неверный текущий пароль для пользователя: {}", email);
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Неверный текущий пароль");

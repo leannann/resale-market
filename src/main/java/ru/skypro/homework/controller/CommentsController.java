@@ -130,7 +130,7 @@ public class CommentsController {
             }
     )
     @DeleteMapping("/ads/{adId}/comments/{commentId}")
-    @PreAuthorize("hasRole('ADMIN') or @commentService.isCommentAuthor(#commentId, authentication.name)")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deleteComment(
             @Parameter(description = "ID объявления") @PathVariable Integer adId,
             @Parameter(description = "ID комментария") @PathVariable Integer commentId,
@@ -171,7 +171,7 @@ public class CommentsController {
             }
     )
     @PatchMapping("/ads/{adId}/comments/{commentId}")
-    @PreAuthorize("hasRole('ADMIN') or @commentService.isCommentAuthor(#commentId, authentication.name)")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<CommentDto> updateComment(
             @Parameter(description = "ID объявления") @PathVariable Integer adId,
             @Parameter(description = "ID комментария") @PathVariable Integer commentId,

@@ -13,11 +13,13 @@ import ru.skypro.homework.dto.CreateOrUpdateAdDto;
 import ru.skypro.homework.dto.ExtendedAdDto;
 import ru.skypro.homework.dto.Role;
 import ru.skypro.homework.entity.Ad;
+import ru.skypro.homework.entity.Comment;
 import ru.skypro.homework.entity.User;
 import ru.skypro.homework.exception.AdAccessDeniedException;
 import ru.skypro.homework.exception.AdNotFoundException;
 import ru.skypro.homework.mappers.AdMapper;
 import ru.skypro.homework.repository.AdRepository;
+import ru.skypro.homework.repository.CommentRepository;
 import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.add.AdService;
 import ru.skypro.homework.service.image.ImageService;
@@ -44,7 +46,9 @@ public class AdServiceImpl implements AdService {
     private final AdMapper adMapper;
     private final UserRepository userRepository;
     private final ImageService imageService;
+    private final CommentRepository commentRepository;
 
+    public AdServiceImpl(AdRepository adRepository, UserRepository userRepository, AdMapper adMapper, ImageService imageService, CommentRepository commentRepository) {
     /**
      * Конструктор сервиса.
      *
@@ -61,6 +65,7 @@ public class AdServiceImpl implements AdService {
         this.userRepository = userRepository;
         this.adMapper = adMapper;
         this.imageService = imageService;
+        this.commentRepository = commentRepository;
     }
 
     /**
@@ -188,6 +193,13 @@ public class AdServiceImpl implements AdService {
         if (!ad.getAuthor().getEmail().equals(username) && user.getRole() != Role.ADMIN) {
             log.warn("Попытка удаления чужого объявления пользователем {}", username);
             throw new AdAccessDeniedException("Нет прав для удаления объявления");
+        }
+
+        // сначала удаляем все комментарии этого объявления
+        List<Comment> comments = commentRepository.findByAdId(id);
+        if (!comments.isEmpty()) {
+            log.debug("Удаление {} комментариев объявления ID: {}", comments.size(), id);
+            commentRepository.deleteAll(comments);
         }
 
         adRepository.delete(ad);

@@ -176,7 +176,7 @@ public class AdsController {
             }
     )
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @adService.isOwner(#id, authentication.name)")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> removeAd(
             @Parameter(description = "ID объявления") @PathVariable Integer id,
             Authentication authentication) {
@@ -227,7 +227,7 @@ public class AdsController {
             }
     )
     @PatchMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @adService.isOwner(#id, authentication.name)")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<AdDto> updateAds(
             @Parameter(description = "ID объявления") @PathVariable Integer id,
             @org.springframework.web.bind.annotation.RequestBody CreateOrUpdateAdDto request,
