@@ -20,11 +20,11 @@
 
 ## 👥 **Авторы проекта**
 
-| Имя               | Роль | Контакт |
-|-------------------|------|----------|
-| *Артем Жуков 1*   | Backend Developer | zhuravlev_artem@list.ru |
-| *Андрей Терзи 2*  | Backend Developer | terzi_andrey_sergeevich@mail.ru |
-| *Чалков Богдан 3* | QA / Docs | bcalkov25@gmail.com |
+| Имя             | Роль | Контакт |
+|-----------------|------|----------|
+| *Артем Жуков *  | Backend Developer | zhuravlev_artem@list.ru |
+| *Андрей Терзи * | Backend Developer | terzi_andrey_sergeevich@mail.ru |
+| *Чалков Богдан * | QA / Docs | bcalkov25@gmail.com |
 
 ---
 
