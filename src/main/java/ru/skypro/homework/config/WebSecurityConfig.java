@@ -18,11 +18,25 @@ import ru.skypro.homework.repository.UserRepository;
 
 import java.util.Arrays;
 
-
+/**
+ * Конфигурация безопасности приложения.
+ * <p>
+ * Настраивает:
+ * <ul>
+ *     <li>аутентификацию пользователей с использованием базы данных;</li>
+ *     <li>настройки CORS для фронтенда;</li>
+ *     <li>правила доступа к REST-эндпоинтам;</li>
+ *     <li>HTTP Basic Authentication;</li>
+ *     <li>поддержку аннотаций {@code @PreAuthorize} и {@code @PostAuthorize}.</li>
+ * </ul>
+ */
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfig {
 
+    /**
+     * Список путей, доступных без авторизации.
+     */
     private static final String[] AUTH_WHITELIST = {
             "/", "/error",
             "/login", "/register",
@@ -33,6 +47,14 @@ public class WebSecurityConfig {
             "/webjars/**"
     };
 
+    /**
+     * Конфигурация источника данных для аутентификации пользователей.
+     * <p>
+     * Обрабатывает загрузку пользователя по email (username) через {@link UserRepository}.
+     *
+     * @param userRepository репозиторий пользователей
+     * @return сервис загрузки данных пользователя
+     */
     @Bean
     public UserDetailsService userDetailsService(UserRepository userRepository) {
         return username -> userRepository.findByEmail(username)
@@ -44,18 +66,31 @@ public class WebSecurityConfig {
                 .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
     }
 
+    /**
+     * Конфигурация кодировщика паролей.
+     * <p>
+     * Используется BCrypt — индустриальный стандарт для безопасного хеширования паролей.
+     *
+     * @return объект {@link BCryptPasswordEncoder}
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Конфигурация CORS для взаимодействия с фронтендом.
+     * <p>
+     * Разрешены локальные домены React-приложения.
+     *
+     * @return объект {@link CorsConfigurationSource} с разрешёнными доменами и методами
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         System.out.println("Разрешённый путь: http://localhost:3000");
 
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Разрешенные фронтенд порты
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:3000",
                 "http://127.0.0.1:3000",
@@ -72,6 +107,22 @@ public class WebSecurityConfig {
         return source;
     }
 
+    /**
+     * Основная конфигурация цепочки фильтров Spring Security.
+     * <p>
+     * Настройки включают:
+     * <ul>
+     *     <li>разрешение CORS;</li>
+     *     <li>отключение CSRF для REST-архитектуры;</li>
+     *     <li>открытый доступ кSwagger и отдельным служебным маршрутам;</li>
+     *     <li>требование авторизации для всех остальных API;</li>
+     *     <li>включение HTTP Basic Authentication.</li>
+     * </ul>
+     *
+     * @param http объект конфигурации Spring Security
+     * @return настроенная цепочка фильтров безопасности
+     * @throws Exception если возникла ошибка при настройке
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -98,6 +149,8 @@ public class WebSecurityConfig {
                         .authenticated()
                 )
                 .httpBasic();
+
         return http.build();
     }
 }
+

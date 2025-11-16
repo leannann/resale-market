@@ -14,16 +14,30 @@ import org.springframework.web.bind.annotation.*;
 import ru.skypro.homework.dto.LoginDto;
 import ru.skypro.homework.service.auth.AuthService;
 
+/**
+ * REST-контроллер, отвечающий за авторизацию пользователей.
+ * <p>
+ * Проверяет логин и пароль и возвращает статус входа.
+ * Используется фронтендом для выполнения базовой авторизации.
+ */
 @Slf4j
 @CrossOrigin(value = "http://localhost:3000")
 @RestController
 @RequiredArgsConstructor
-@Tag(name = "Авторизация", description = "Метод для входа  пользователей в систему")
+@Tag(
+        name = "Авторизация",
+        description = "Методы для входа пользователей в систему"
+)
 public class AuthController {
 
     private final AuthService authService;
 
-
+    /**
+     * Авторизация пользователя по логину и паролю.
+     *
+     * @param login данные пользователя (логин + пароль)
+     * @return статус 200 при успехе, 401 при неверных данных
+     */
     @Operation(
             summary = "Авторизация пользователя",
             description = "Проверяет логин и пароль пользователя. Возвращает 200 при успешной авторизации, 401 — при ошибке.",
@@ -39,14 +53,18 @@ public class AuthController {
     )
     @PostMapping("/login")
     public ResponseEntity<Void> login(@org.springframework.web.bind.annotation.RequestBody LoginDto login) {
-        log.info("Попытка входа в систему: username={}", login.getUsername());
 
-        if (authService.login(login.getUsername(), login.getPassword())) {
-            log.info("Вход в систему прошел успешно: username={}", login.getUsername());
+        log.info("Попытка входа: username={}", login.getUsername());
+
+        boolean authenticated = authService.login(login.getUsername(), login.getPassword());
+
+        if (authenticated) {
+            log.info("Вход выполнен успешно: username={}", login.getUsername());
             return ResponseEntity.ok().build();
         } else {
-            log.warn("Ошибка входа в систему: username={} (invalid credentials)", login.getUsername());
+            log.warn("Неудачная попытка входа: username={} — неверные данные", login.getUsername());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }
 }
+

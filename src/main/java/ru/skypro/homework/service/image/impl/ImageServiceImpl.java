@@ -15,15 +15,29 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
+/**
+ * Реализация сервиса {@link ImageService} для работы с изображениями.
+ * <p>
+ * Обеспечивает сохранение, загрузку, удаление файлов изображений,
+ * а также определение расширений и MIME-типов.
+ * <br>
+ * Работает с изображениями объявлений и аватарами пользователей.
+ */
 @Slf4j
 @Service
 public class ImageServiceImpl implements ImageService {
+
     @Value("${app.image.upload-dir:uploads/images/}")
     private String uploadDir;
 
     @Value("${app.image.base-url:http://localhost:8080}")
     private String baseUrl;
 
+    /**
+     * Инициализирует необходимые директории для хранения изображений.
+     * <p>
+     * Метод создаёт каталоги {@code avatars/} и {@code ads/}, если они отсутствуют.
+     */
     @PostConstruct
     public void init() {
         try {
@@ -35,50 +49,61 @@ public class ImageServiceImpl implements ImageService {
         }
     }
 
+    /**
+     * Сохраняет изображение в файловой системе.
+     *
+     * @param image     файл изображения
+     * @param subfolder подкаталог, в котором будет сохранён файл
+     * @return путь к изображению в формате {@code /images/{subfolder}/{filename}}
+     * @throws IOException              если не удалось сохранить файл
+     * @throws IllegalArgumentException если файл пустой или не является изображением
+     */
     @Override
     public String saveImage(MultipartFile image, String subfolder) throws IOException {
         log.debug("Сохранение изображения: {}", image.getOriginalFilename());
 
-        // Валидация
         if (image.isEmpty()) {
             throw new IllegalArgumentException("Файл изображения пустой");
         }
 
-        // Проверка типа файла
         String contentType = image.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
             throw new IllegalArgumentException("Файл должен быть изображением");
         }
 
-        // Генерация имени файла
         String fileName = FileNameUtils.generateFileName(image.getOriginalFilename());
 
-        // Путь для сохранения
         String fullUploadDir = uploadDir + subfolder + "/";
         Path uploadPath = Paths.get(fullUploadDir);
 
-        // Создаем директорию если не существует
         if (!Files.exists(uploadPath)) {
             Files.createDirectories(uploadPath);
         }
 
-        // Сохраняем файл
         Path filePath = uploadPath.resolve(fileName);
         Files.copy(image.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
         String imagePath = "/images/" + subfolder + "/" + fileName;
-        String fullImageUrl = baseUrl + imagePath;
-        log.info("Изображение сохранено: {} (URL: {})", filePath, fullImageUrl);
+        log.info("Изображение сохранено: {} (URL: {})", filePath, baseUrl + imagePath);
 
         return imagePath;
     }
 
+    /**
+     * Загружает изображение из файловой системы.
+     *
+     * @param imagePath путь к изображению в формате {@code /images/...}
+     * @return массив байт, содержащий данные изображения
+     * @throws IOException если изображение отсутствует или недоступно
+     */
     @Override
     public byte[] loadImage(String imagePath) throws IOException {
         log.debug("Загрузка изображения: {}", imagePath);
 
-        // Убираем начальный слэш для создания полного пути
-        String relativePath = imagePath.startsWith("/images/") ? imagePath.substring(8) : imagePath;
+        String relativePath = imagePath.startsWith("/images/")
+                ? imagePath.substring(8)
+                : imagePath;
+
         Path filePath = Paths.get(uploadDir, relativePath);
 
         if (!Files.exists(filePath)) {
@@ -89,11 +114,20 @@ public class ImageServiceImpl implements ImageService {
         return Files.readAllBytes(filePath);
     }
 
+    /**
+     * Удаляет изображение по указанному пути.
+     *
+     * @param imagePath путь к изображению в формате {@code /images/...}
+     * @throws IOException если произошла ошибка удаления файла
+     */
     @Override
     public void deleteImage(String imagePath) throws IOException {
         log.debug("Удаление изображения: {}", imagePath);
 
-        String relativePath = imagePath.startsWith("/images/") ? imagePath.substring(8) : imagePath;
+        String relativePath = imagePath.startsWith("/images/")
+                ? imagePath.substring(8)
+                : imagePath;
+
         Path filePath = Paths.get(uploadDir, relativePath);
 
         if (Files.exists(filePath)) {
@@ -104,6 +138,12 @@ public class ImageServiceImpl implements ImageService {
         }
     }
 
+    /**
+     * Определяет MIME-тип изображения по его пути.
+     *
+     * @param imagePath путь к файлу изображения
+     * @return MIME-тип изображения, по умолчанию JPEG
+     */
     @Override
     public MediaType determineMediaType(String imagePath) {
         if (imagePath == null) {
@@ -125,7 +165,10 @@ public class ImageServiceImpl implements ImageService {
     }
 
     /**
-     * Определяет MediaType по MultipartFile
+     * Определяет MIME-тип изображения на основе загруженного файла.
+     *
+     * @param file файл изображения
+     * @return MIME-тип изображения
      */
     @Override
     public MediaType determineMediaType(MultipartFile file) {
@@ -133,12 +176,14 @@ public class ImageServiceImpl implements ImageService {
             return MediaType.parseMediaType(file.getContentType());
         }
 
-        // Если Content-Type неопределен, определяем по имени файла
         return determineMediaType(file.getOriginalFilename());
     }
 
     /**
-     * Определяет расширение файла по MediaType
+     * Определяет расширение файла по его MIME-типу.
+     *
+     * @param mediaType MIME-тип изображения
+     * @return расширение файла (например, {@code ".jpg"}, {@code ".png"})
      */
     @Override
     public String getFileExtension(MediaType mediaType) {
@@ -151,8 +196,9 @@ public class ImageServiceImpl implements ImageService {
         } else if (mediaType.toString().equals("image/bmp")) {
             return ".bmp";
         } else {
-            return ".jpg";
+            return ".jpg"; // по умолчанию
         }
     }
 }
+
 
