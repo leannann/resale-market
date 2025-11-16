@@ -12,18 +12,32 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.skypro.homework.dto.LoginDto;
-import ru.skypro.homework.dto.RegisterDto;
 import ru.skypro.homework.service.auth.AuthService;
 
+/**
+ * REST-контроллер, отвечающий за авторизацию пользователей.
+ * <p>
+ * Проверяет логин и пароль и возвращает статус входа.
+ * Используется фронтендом для выполнения базовой авторизации.
+ */
 @Slf4j
 @CrossOrigin(value = "http://localhost:3000")
 @RestController
 @RequiredArgsConstructor
-@Tag(name = "Авторизация и регистрация", description = "Методы для входа и регистрации пользователей")
+@Tag(
+        name = "Авторизация",
+        description = "Методы для входа пользователей в систему"
+)
 public class AuthController {
 
     private final AuthService authService;
 
+    /**
+     * Авторизация пользователя по логину и паролю.
+     *
+     * @param login данные пользователя (логин + пароль)
+     * @return статус 200 при успехе, 401 при неверных данных
+     */
     @Operation(
             summary = "Авторизация пользователя",
             description = "Проверяет логин и пароль пользователя. Возвращает 200 при успешной авторизации, 401 — при ошибке.",
@@ -39,32 +53,18 @@ public class AuthController {
     )
     @PostMapping("/login")
     public ResponseEntity<Void> login(@org.springframework.web.bind.annotation.RequestBody LoginDto login) {
-        if (authService.login(login.getUsername(), login.getPassword())) {
+
+        log.info("Попытка входа: username={}", login.getUsername());
+
+        boolean authenticated = authService.login(login.getUsername(), login.getPassword());
+
+        if (authenticated) {
+            log.info("Вход выполнен успешно: username={}", login.getUsername());
             return ResponseEntity.ok().build();
         } else {
+            log.warn("Неудачная попытка входа: username={} — неверные данные", login.getUsername());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }
-
-    @Operation(
-            summary = "Регистрация нового пользователя",
-            description = "Создает нового пользователя. Возвращает 201 при успешной регистрации, 400 — при ошибке.",
-            requestBody = @RequestBody(
-                    description = "Данные для регистрации нового пользователя",
-                    required = true,
-                    content = @Content(schema = @Schema(implementation = RegisterDto.class))
-            ),
-            responses = {
-                    @ApiResponse(responseCode = "201", description = "Пользователь успешно зарегистрирован"),
-                    @ApiResponse(responseCode = "400", description = "Некорректные данные регистрации")
-            }
-    )
-    @PostMapping("/register")
-    public ResponseEntity<Void> register(@org.springframework.web.bind.annotation.RequestBody RegisterDto register) {
-        if (authService.register(register)) {
-            return ResponseEntity.status(HttpStatus.CREATED).build();
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
-    }
 }
+
