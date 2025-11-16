@@ -63,9 +63,11 @@ public class UserServiceImpl implements UserService {
                 });
 
         // Проверка текущего пароля
-        if (!passwordEncoder.matches(newPassword.getCurrentPassword(), user.getPassword())) {
-            log.warn("Неверный текущий пароль для пользователя: {}", email);
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Неверный текущий пароль");
+        if (newPassword.getCurrentPassword() != null && !newPassword.getCurrentPassword().isEmpty()) {
+            if (!passwordEncoder.matches(newPassword.getCurrentPassword(), user.getPassword())) {
+                log.warn("Неверный текущий пароль для пользователя: {}", email);
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Неверный текущий пароль");
+            }
         }
 
         // Проверка, что новый пароль отличается от старого

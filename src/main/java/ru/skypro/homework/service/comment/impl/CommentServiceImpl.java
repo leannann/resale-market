@@ -10,10 +10,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import ru.skypro.homework.dto.CommentDto;
 import ru.skypro.homework.dto.CreateOrUpdateCommentDto;
+import ru.skypro.homework.dto.Role;
 import ru.skypro.homework.entity.Ad;
 import ru.skypro.homework.entity.Comment;
 import ru.skypro.homework.entity.User;
 import ru.skypro.homework.exception.AdNotFoundException;
+import ru.skypro.homework.exception.CommentAccessDeniedException;
 import ru.skypro.homework.exception.CommentNotFoundException;
 import ru.skypro.homework.mappers.CommentMapper;
 import ru.skypro.homework.repository.AdRepository;
@@ -84,6 +86,15 @@ public class CommentServiceImpl implements CommentService {
             Comment comment = commentRepository.findById(commentId)
                     .orElseThrow(() -> new CommentNotFoundException("Комментарий не найден"));
 
+            User user = userRepository.findByEmail(username)
+                    .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+
+            // Проверяем права: автор комментария или админ
+            if (!comment.getAuthor().getEmail().equals(username) && user.getRole() != Role.ADMIN) {
+                log.warn("Попытка обновления чужого комментария: пользователь={}, комментарий={}", username, commentId);
+                throw new CommentAccessDeniedException("Нет прав для обновления комментария");
+            }
+
             if (updateCommentDto.getText() == null || updateCommentDto.getText().trim().isEmpty()) {
                 throw new IllegalArgumentException("Текст комментария не может быть пустым");
             }
@@ -109,6 +120,15 @@ public class CommentServiceImpl implements CommentService {
         try {
             Comment comment = commentRepository.findById(commentId)
                     .orElseThrow(() -> new CommentNotFoundException("Комментарий не найден"));
+
+            User user = userRepository.findByEmail(username)
+                    .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+
+            // Проверяем права: автор комментария или админ
+            if (!comment.getAuthor().getEmail().equals(username) && user.getRole() != Role.ADMIN) {
+                log.warn("Попытка удаления чужого комментария: пользователь={}, комментарий={}", username, commentId);
+                throw new CommentAccessDeniedException("Нет прав для удаления комментария");
+            }
 
             commentRepository.delete(comment);
             log.info("Удален комментарий ID: {}", commentId);
