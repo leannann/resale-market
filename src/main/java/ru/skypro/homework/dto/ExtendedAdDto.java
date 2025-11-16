@@ -9,7 +9,7 @@ import lombok.Data;
 public class ExtendedAdDto {
     @JsonProperty("pk")
     @Schema(description = "ID объявления", example = "101")
-    private Integer id;
+    private Integer pk;
 
     @JsonProperty("authorFirstName")
     @Schema(description = "Имя автора объявления", example = "Иван")
@@ -25,15 +25,15 @@ public class ExtendedAdDto {
 
     @JsonProperty("email")
     @Schema(description = "Логин (email) автора объявления", example = "user1@example.com")
-    private String authorEmail;
+    private String email;
 
     @JsonProperty("image")
     @Schema(description = "Ссылка на картинку объявления", example = "/images/ads/101.jpg")
-    private String imageUrl;
+    private String image;
 
     @JsonProperty("phone")
     @Schema(description = "Телефон автора объявления", example = "+7 (999) 123-45-67")
-    private String authorPhone;
+    private String phone;
 
     @JsonProperty("price")
     @Schema(description = "Цена объявления", example = "15000", minimum = "0", maximum = "10000000")
