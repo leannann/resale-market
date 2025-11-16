@@ -8,27 +8,98 @@ import ru.skypro.homework.dto.ExtendedAdDto;
 
 import java.io.IOException;
 
+/**
+ * Сервис для управления объявлениями.
+ * <p>
+ * Определяет операции по созданию, обновлению, удалению и получению объявлений,
+ * а также по работе с изображениями объявлений. Сервис используется
+ * контроллерами для реализации REST API.
+ */
 public interface AdService {
+
+    /**
+     * Возвращает список всех объявлений в системе.
+     *
+     * @return объект {@link AdsDto}, содержащий список объявлений
+     */
     AdsDto getAllAds();
 
-    AdDto createAd(CreateOrUpdateAdDto createAdDto, MultipartFile image, String username) throws IOException;
+    /**
+     * Создаёт новое объявление с изображением.
+     *
+     * @param createAdDto данные нового объявления
+     * @param image       изображение объявления
+     * @param username    email автора объявления
+     * @return созданное объявление в виде {@link AdDto}
+     * @throws IOException если изображение не удалось сохранить
+     */
+    AdDto createAd(CreateOrUpdateAdDto createAdDto,
+                   MultipartFile image,
+                   String username) throws IOException;
 
-    // GET /ads/{id} - Получение информации об объявлении
+    /**
+     * Возвращает расширенную информацию по объявлению.
+     *
+     * @param id идентификатор объявления
+     * @return объект {@link ExtendedAdDto} с подробными данными
+     */
     ExtendedAdDto getExtendedAdById(Integer id);
 
+    /**
+     * Удаляет объявление по его идентификатору.
+     *
+     * @param id       идентификатор объявления
+     * @param username email пользователя, выполняющего удаление
+     */
     void deleteAd(Integer id, String username);
 
-    // PATCH /ads/{id} - Обновление информации об объявлении
-    AdDto updateAd(Integer id, CreateOrUpdateAdDto updateDto, String username);
+    /**
+     * Обновляет данные объявления.
+     *
+     * @param id        идентификатор объявления
+     * @param updateDto новые данные объявления
+     * @param username  email пользователя, выполняющего обновление
+     * @return обновленное объявление в виде {@link AdDto}
+     */
+    AdDto updateAd(Integer id,
+                   CreateOrUpdateAdDto updateDto,
+                   String username);
 
-    // GET /ads/me - Получение объявлений авторизованного пользователя
+    /**
+     * Возвращает список объявлений, созданных авторизованным пользователем.
+     *
+     * @param username email автора объявлений
+     * @return список объявлений пользователя в виде {@link AdsDto}
+     */
     AdsDto getMyAds(String username);
 
-    // PATCH /ads/{id}/image - Обновление картинки объявления
-    void updateAdImage(Integer id, MultipartFile image, String username) throws IOException;
+    /**
+     * Обновляет изображение объявления.
+     *
+     * @param id        идентификатор объявления
+     * @param image     новое изображение
+     * @param username  email пользователя, выполняющего обновление
+     * @throws IOException если изображение не удалось сохранить
+     */
+    void updateAdImage(Integer id,
+                       MultipartFile image,
+                       String username) throws IOException;
 
-    // Вспомогательные методы
+    /**
+     * Проверяет, является ли пользователь владельцем объявления.
+     *
+     * @param adId      идентификатор объявления
+     * @param userEmail email пользователя
+     * @return {@code true}, если пользователь является автором объявления
+     */
     boolean isOwner(Integer adId, String userEmail);
 
+    /**
+     * Возвращает путь к изображению объявления.
+     *
+     * @param id идентификатор объявления
+     * @return путь к изображению
+     */
     String getAdImagePath(Integer id);
 }
+

@@ -23,26 +23,59 @@ import ru.skypro.homework.repository.CommentRepository;
 import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.comment.CommentService;
 
+/**
+ * Реализация сервиса {@link CommentService} для работы с комментариями.
+ * <p>
+ * Обеспечивает функциональность добавления, обновления, удаления и получения
+ * комментариев, а также проверку авторства. Содержит проверки корректности
+ * входящих данных и обработку исключительных ситуаций.
+ */
 @Slf4j
 @Service
 public class CommentServiceImpl implements CommentService {
+
     private final CommentRepository commentRepository;
     private final CommentMapper commentMapper;
     private final AdRepository adRepository;
     private final UserRepository userRepository;
 
-    public CommentServiceImpl(CommentRepository commentRepository, AdRepository adRepository, UserRepository userRepository, CommentMapper commentMapper) {
+    /**
+     * Конструктор сервиса.
+     *
+     * @param commentRepository репозиторий комментариев
+     * @param adRepository      репозиторий объявлений
+     * @param userRepository    репозиторий пользователей
+     * @param commentMapper     маппер комментариев в DTO
+     */
+    public CommentServiceImpl(CommentRepository commentRepository,
+                              AdRepository adRepository,
+                              UserRepository userRepository,
+                              CommentMapper commentMapper) {
         this.commentRepository = commentRepository;
         this.adRepository = adRepository;
         this.userRepository = userRepository;
         this.commentMapper = commentMapper;
     }
 
+    /**
+     * Добавляет новый комментарий к объявлению.
+     *
+     * @param adId              идентификатор объявления
+     * @param createCommentDto  данные нового комментария
+     * @param username          email автора комментария
+     * @return DTO созданного комментария
+     * @throws ResponseStatusException если:
+     *                                 <ul>
+     *                                   <li>пользователь не аутентифицирован</li>
+     *                                   <li>объявление не найдено</li>
+     *                                   <li>пользователь не найден</li>
+     *                                   <li>текст комментария пуст</li>
+     *                                 </ul>
+     */
     @Override
     public CommentDto addComment(Integer adId, CreateOrUpdateCommentDto createCommentDto, String username) {
         log.debug("Добавление комментария к объявлению ID: {} пользователем: {}", adId, username);
 
-        // Проверка аутентификации пользователя
         if (username == null || username.trim().isEmpty()) {
             log.warn("Попытка добавления комментария неаутентифицированным пользователем");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Пользователь не аутентифицирован");
@@ -69,6 +102,7 @@ public class CommentServiceImpl implements CommentService {
             log.info("Добавлен комментарий к объявлению ID: {}", adId);
 
             return commentMapper.commentToCommentDto(savedComment);
+
         } catch (AdNotFoundException e) {
             log.warn("Объявление не найдено: ID {}", adId);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
@@ -78,6 +112,15 @@ public class CommentServiceImpl implements CommentService {
         }
     }
 
+    /**
+     * Обновляет существующий комментарий.
+     *
+     * @param commentId         идентификатор комментария
+     * @param updateCommentDto  новые данные комментария
+     * @param username          email пользователя, выполняющего обновление
+     * @return обновлённый комментарий в виде DTO
+     * @throws ResponseStatusException если комментарий не найден или текст пуст
+     */
     @Override
     public CommentDto updateComment(Integer commentId, CreateOrUpdateCommentDto updateCommentDto, String username) {
         log.debug("Обновление комментария ID: {} пользователем: {}", commentId, username);
@@ -104,6 +147,7 @@ public class CommentServiceImpl implements CommentService {
             log.info("Обновлен комментарий ID: {}", commentId);
 
             return commentMapper.commentToCommentDto(updatedComment);
+
         } catch (CommentNotFoundException e) {
             log.warn("Комментарий не найден: ID {}", commentId);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
@@ -113,6 +157,13 @@ public class CommentServiceImpl implements CommentService {
         }
     }
 
+    /**
+     * Удаляет комментарий по его идентификатору.
+     *
+     * @param commentId идентификатор комментария
+     * @param username  email пользователя, выполняющего удаление
+     * @throws ResponseStatusException если комментарий не найден
+     */
     @Override
     public void deleteComment(Integer commentId, String username) {
         log.debug("Удаление комментария ID: {} пользователем: {}", commentId, username);
@@ -132,18 +183,25 @@ public class CommentServiceImpl implements CommentService {
 
             commentRepository.delete(comment);
             log.info("Удален комментарий ID: {}", commentId);
+
         } catch (CommentNotFoundException e) {
             log.warn("Комментарий не найден: ID {}", commentId);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
     }
 
+    /**
+     * Возвращает список комментариев, принадлежащих указанному объявлению.
+     *
+     * @param adId идентификатор объявления
+     * @return список комментариев объявления
+     * @throws ResponseStatusException если объявление не найдено
+     */
     @Override
     public List<CommentDto> getCommentsByAdId(Integer adId) {
         log.debug("Получение комментариев для объявления ID: {}", adId);
 
         try {
-            // Проверяем существование объявления
             if (!adRepository.existsById(adId)) {
                 throw new AdNotFoundException("Объявление с ID " + adId + " не найдено");
             }
@@ -152,13 +210,20 @@ public class CommentServiceImpl implements CommentService {
             return comments.stream()
                     .map(commentMapper::commentToCommentDto)
                     .collect(Collectors.toList());
+
         } catch (AdNotFoundException e) {
             log.warn("Объявление не найдено: ID {}", adId);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
     }
 
-    //вспомогательный метод для проверки авторизации
+    /**
+     * Проверяет, является ли указанный пользователь автором комментария.
+     *
+     * @param commentId идентификатор комментария
+     * @param userEmail email пользователя
+     * @return {@code true}, если пользователь автор комментария; иначе {@code false}
+     */
     @Override
     public boolean isCommentAuthor(Integer commentId, String userEmail) {
         return commentRepository.findById(commentId)
@@ -166,3 +231,4 @@ public class CommentServiceImpl implements CommentService {
                 .orElse(false);
     }
 }
+

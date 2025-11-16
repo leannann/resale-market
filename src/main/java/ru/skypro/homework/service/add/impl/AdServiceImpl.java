@@ -24,6 +24,20 @@ import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.add.AdService;
 import ru.skypro.homework.service.image.ImageService;
 
+/**
+ * Реализация сервиса {@link AdService} для управления объявлениями.
+ * <p>
+ * Сервис реализует операции:
+ * <ul>
+ *     <li>получение списка объявлений;</li>
+ *     <li>создание нового объявления;</li>
+ *     <li>обновление данных или изображения объявления;</li>
+ *     <li>удаление объявления;</li>
+ *     <li>проверка прав владельца.</li>
+ * </ul>
+ * <p>
+ * Включает проверки аутентификации, авторизации и корректности входящих данных.
+ */
 @Slf4j
 @Service
 public class AdServiceImpl implements AdService {
@@ -35,6 +49,18 @@ public class AdServiceImpl implements AdService {
     private final CommentRepository commentRepository;
 
     public AdServiceImpl(AdRepository adRepository, UserRepository userRepository, AdMapper adMapper, ImageService imageService, CommentRepository commentRepository) {
+    /**
+     * Конструктор сервиса.
+     *
+     * @param adRepository  репозиторий объявлений
+     * @param userRepository репозиторий пользователей
+     * @param adMapper      маппер сущностей объявлений в DTO
+     * @param imageService  сервис для работы с изображениями
+     */
+    public AdServiceImpl(AdRepository adRepository,
+                         UserRepository userRepository,
+                         AdMapper adMapper,
+                         ImageService imageService) {
         this.adRepository = adRepository;
         this.userRepository = userRepository;
         this.adMapper = adMapper;
@@ -42,26 +68,45 @@ public class AdServiceImpl implements AdService {
         this.commentRepository = commentRepository;
     }
 
+    /**
+     * Возвращает список всех объявлений в системе.
+     *
+     * @return объект {@link AdsDto}, содержащий количество и список объявлений
+     */
     @Override
     public AdsDto getAllAds() {
         log.info("Получение списка всех объявлений");
+
         List<Ad> ads = adRepository.findAll();
 
         AdsDto adsDto = new AdsDto();
         adsDto.setCount(ads.size());
-        adsDto.setResults(ads.stream()
-                .map(adMapper::adToAdDto)
-                .collect(Collectors.toList()));
+        adsDto.setResults(
+                ads.stream()
+                        .map(adMapper::adToAdDto)
+                        .collect(Collectors.toList())
+        );
 
         log.info("Найдено {} объявлений", adsDto.getCount());
         return adsDto;
     }
 
+    /**
+     * Создаёт новое объявление.
+     * <p>
+     * Производит валидацию данных и сохраняет изображение через {@link ImageService}.
+     *
+     * @param createAdDto данные нового объявления
+     * @param image       файл изображения
+     * @param username    email автора объявления
+     * @return созданное объявление в формате {@link AdDto}
+     * @throws IOException если изображение не удалось сохранить
+     * @throws IllegalArgumentException если данные объявления некорректны
+     */
     @Override
     public AdDto createAd(CreateOrUpdateAdDto createAdDto, MultipartFile image, String username) throws IOException {
         log.info("Создание нового объявления пользователем: {}", username);
 
-        // Находим автора
         User author = userRepository.findByEmail(username)
                 .orElseThrow(() -> {
                     log.error("Пользователь {} не найден", username);
@@ -78,10 +123,8 @@ public class AdServiceImpl implements AdService {
             throw new IllegalArgumentException("Изображение обязательно");
         }
 
-        // Сохраняем изображение
         String imagePath = imageService.saveImage(image, "ads");
 
-        // Создаем объявление
         Ad ad = new Ad();
         ad.setAuthor(author);
         ad.setTitle(createAdDto.getTitle());
@@ -90,11 +133,18 @@ public class AdServiceImpl implements AdService {
         ad.setImageUrl(imagePath);
 
         Ad savedAd = adRepository.save(ad);
-        log.info("Объявление успешно создано: ID={}, заголовок='{}'", savedAd.getId(), savedAd.getTitle());
+        log.info("Объявление создано: ID={}", savedAd.getId());
 
         return adMapper.adToAdDto(savedAd);
     }
 
+    /**
+     * Возвращает расширенную информацию об объявлении.
+     *
+     * @param id идентификатор объявления
+     * @return объект {@link ExtendedAdDto} с подробными данными
+     * @throws AdNotFoundException если объявление не найдено
+     */
     @Override
     public ExtendedAdDto getExtendedAdById(Integer id) {
         log.info("Получение расширенной информации об объявлении ID: {}", id);
@@ -107,21 +157,29 @@ public class AdServiceImpl implements AdService {
 
         User author = ad.getAuthor();
 
-        ExtendedAdDto extendedAd = new ExtendedAdDto();
-        extendedAd.setPk(ad.getId());
-        extendedAd.setTitle(ad.getTitle());
-        extendedAd.setPrice(ad.getPrice());
-        extendedAd.setDescription(ad.getDescription());
-        extendedAd.setImage(ad.getImageUrl());
-        extendedAd.setEmail(author.getEmail());
-        extendedAd.setPhone(author.getPhone());
-        extendedAd.setAuthorFirstName(author.getFirstName());
-        extendedAd.setAuthorLastName(author.getLastName());
-        log.info("Расширенная информация об объявлении ID={} найдена", id);
+        ExtendedAdDto dto = new ExtendedAdDto();
+        dto.setPk(ad.getId());
+        dto.setTitle(ad.getTitle());
+        dto.setPrice(ad.getPrice());
+        dto.setDescription(ad.getDescription());
+        dto.setImage(ad.getImageUrl());
+        dto.setEmail(author.getEmail());
+        dto.setPhone(author.getPhone());
+        dto.setAuthorFirstName(author.getFirstName());
+        dto.setAuthorLastName(author.getLastName());
 
-        return extendedAd;
+        return dto;
     }
 
+    /**
+     * Удаляет объявление.
+     * <p>
+     * Удаление разрешено только владельцу объявления или администратору.
+     *
+     * @param id       идентификатор объявления
+     * @param username email пользователя, выполняющего удаление
+     * @throws AdAccessDeniedException если нет прав на удаление
+     */
     @Override
     public void deleteAd(Integer id, String username) {
         log.info("Удаление объявления ID: {} пользователем: {}", id, username);
@@ -129,12 +187,11 @@ public class AdServiceImpl implements AdService {
         Ad ad = adRepository.findById(id)
                 .orElseThrow(() -> new AdNotFoundException("Объявление не найдено"));
 
-        // Проверяем права: владелец ИЛИ админ
         User user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
 
         if (!ad.getAuthor().getEmail().equals(username) && user.getRole() != Role.ADMIN) {
-            log.warn("Попытка удаления чужого объявления: пользователь={}, объявление={}", username, id);
+            log.warn("Попытка удаления чужого объявления пользователем {}", username);
             throw new AdAccessDeniedException("Нет прав для удаления объявления");
         }
 
@@ -146,82 +203,95 @@ public class AdServiceImpl implements AdService {
         }
 
         adRepository.delete(ad);
-        log.info("Объявление с ID {} успешно удалено", id);
+        log.info("Объявление ID {} удалено", id);
     }
 
+    /**
+     * Обновляет данные объявления.
+     * <p>
+     * Разрешено владельцу или администратору.
+     *
+     * @param id        идентификатор объявления
+     * @param updateDto новые данные объявления
+     * @param username  email пользователя
+     * @return обновленное объявление
+     * @throws AdAccessDeniedException если нет прав на обновление
+     */
     @Override
     public AdDto updateAd(Integer id, CreateOrUpdateAdDto updateDto, String username) {
         log.info("Обновление объявления ID: {} пользователем: {}", id, username);
 
         Ad existingAd = adRepository.findById(id)
-                .orElseThrow(() ->  new AdNotFoundException("Объявление не найдено"));
+                .orElseThrow(() -> new AdNotFoundException("Объявление не найдено"));
 
-        // Получаем пользователя чтобы проверить роль
         User user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
 
         boolean isOwner = isOwner(id, username);
         boolean isAdmin = user.getRole() == Role.ADMIN;
 
-        // Разрешаем обновление если пользователь ВЛАДЕЛЕЦ или АДМИН
         if (!isOwner && !isAdmin) {
-            log.warn("Попытка обновления чужого объявления: пользователь={}, объявление={}", username, id);
+            log.warn("Нет прав на обновление объявления ID {}", id);
             throw new AdAccessDeniedException("Нет прав для обновления объявления");
         }
 
-        // Обновляем поля
-        if (updateDto.getTitle() != null) {
-            existingAd.setTitle(updateDto.getTitle());
-        }
-        if (updateDto.getPrice() != null) {
-            existingAd.setPrice(updateDto.getPrice());
-        }
-        if (updateDto.getDescription() != null) {
-            existingAd.setDescription(updateDto.getDescription());
-        }
+        if (updateDto.getTitle() != null) existingAd.setTitle(updateDto.getTitle());
+        if (updateDto.getPrice() != null) existingAd.setPrice(updateDto.getPrice());
+        if (updateDto.getDescription() != null) existingAd.setDescription(updateDto.getDescription());
 
         Ad updatedAd = adRepository.save(existingAd);
-        log.info("Объявление ID={} успешно обновлено", id);
 
         return adMapper.adToAdDto(updatedAd);
     }
 
+    /**
+     * Получает объявления, созданные авторизованным пользователем.
+     *
+     * @param username email автора
+     * @return список объявлений пользователя
+     */
     @Override
     public AdsDto getMyAds(String username) {
-        log.info("Получение объявлений пользователя: {}", username);
+        log.info("Получение объявлений пользователя {}", username);
 
         User author = userRepository.findByEmail(username)
                 .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
 
-        List<Ad> userAds = adRepository.findByAuthor(author);
+        List<Ad> ads = adRepository.findByAuthor(author);
 
-        AdsDto adsDto = new AdsDto();
-        adsDto.setCount(userAds.size());
-        adsDto.setResults(userAds.stream()
-                .map(adMapper::adToAdDto)
-                .collect(Collectors.toList()));
+        AdsDto dto = new AdsDto();
+        dto.setCount(ads.size());
+        dto.setResults(
+                ads.stream()
+                        .map(adMapper::adToAdDto)
+                        .collect(Collectors.toList())
+        );
 
-        log.info("Найдено {} объявлений пользователя {}", adsDto.getCount(), username);
-        return adsDto;
+        return dto;
     }
 
+    /**
+     * Обновляет изображение объявления.
+     *
+     * @param id       идентификатор объявления
+     * @param image    новое изображение
+     * @param username email пользователя
+     * @throws IOException если файл не удалось сохранить
+     */
     @Override
     public void updateAdImage(Integer id, MultipartFile image, String username) throws IOException {
-        log.info("Обновление изображения объявления ID: {} пользователем: {}", id, username);
+        log.info("Обновление изображения объявления ID {} пользователем {}", id, username);
 
-        Ad existingAd = adRepository.findById(id)
+        Ad ad = adRepository.findById(id)
                 .orElseThrow(() -> new AdNotFoundException("Объявление не найдено"));
 
-        // Получаем пользователя чтобы проверить роль
         User user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
 
         boolean isOwner = isOwner(id, username);
         boolean isAdmin = user.getRole() == Role.ADMIN;
 
-        // Разрешаем обновление изображения если пользователь ВЛАДЕЛЕЦ или АДМИН
         if (!isOwner && !isAdmin) {
-            log.warn("Попытка обновления изображения чужого объявления: пользователь={}, объявление={}", username, id);
             throw new AdAccessDeniedException("Нет прав для обновления объявления");
         }
 
@@ -229,15 +299,17 @@ public class AdServiceImpl implements AdService {
             throw new IllegalArgumentException("Изображение обязательно");
         }
 
-        // Сохраняем изображение
-        // Фронт отправляет файл → сервис сохраняет на диск → возвращает путь
         String newImagePath = imageService.saveImage(image, "ads");
-        existingAd.setImageUrl(newImagePath);
-        adRepository.save(existingAd);
-
-        log.info("Изображение обновлено для объявления ID: {}", id);
+        ad.setImageUrl(newImagePath);
+        adRepository.save(ad);
     }
 
+    /**
+     * Возвращает путь к изображению объявления.
+     *
+     * @param id идентификатор объявления
+     * @return путь к изображению
+     */
     @Override
     public String getAdImagePath(Integer id) {
         return adRepository.findById(id)
@@ -245,22 +317,22 @@ public class AdServiceImpl implements AdService {
                 .orElseThrow(() -> new RuntimeException("Объявление не найдено"));
     }
 
-
+    /**
+     * Проверяет, является ли пользователь владельцем объявления.
+     *
+     * @param adId      идентификатор объявления
+     * @param userEmail email пользователя
+     * @return {@code true}, если пользователь владелец
+     */
     @Override
     public boolean isOwner(Integer adId, String userEmail) {
-        log.debug("Проверка прав доступа: объявление ID={}, пользователь={}", adId, userEmail);
+        log.debug("Проверка прав владельца объявления ID {} для пользователя {}", adId, userEmail);
+
         boolean isOwner = adRepository.findById(adId)
-                .map(ad -> {
-                    boolean result = ad.getAuthor().getEmail().equals(userEmail);
-                    log.debug("Результат проверки прав: {}", result);
-                    return result;
-                })
+                .map(ad -> ad.getAuthor().getEmail().equals(userEmail))
                 .orElse(false);
 
-        if (!isOwner) {
-            log.warn("Отказано в доступе: пользователь {} не является владельцем объявления {}",
-                    userEmail, adId);
-        }
         return isOwner;
     }
 }
+
