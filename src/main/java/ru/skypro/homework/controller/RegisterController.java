@@ -16,18 +16,34 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.skypro.homework.dto.RegisterDto;
 import ru.skypro.homework.service.auth.AuthService;
 
+/**
+ * REST-контроллер, отвечающий за регистрацию новых пользователей.
+ * <p>
+ * Содержит единственный эндпоинт, позволяющий создать нового пользователя в системе.
+ * В случае успешной регистрации возвращает HTTP 201,
+ * при ошибочных данных — HTTP 400.
+ */
 @Slf4j
 @CrossOrigin(value = "http://localhost:3000")
 @RestController
 @RequiredArgsConstructor
-@Tag(name = "Регистрация", description = "Метод для регистрации новых пользователей")
+@Tag(
+        name = "Регистрация",
+        description = "Метод для регистрации новых пользователей"
+)
 public class RegisterController {
 
     private final AuthService authService;
 
+    /**
+     * Регистрирует нового пользователя на основе данных, переданных в {@link RegisterDto}.
+     *
+     * @param register DTO с регистрационными данными пользователя
+     * @return статус 201 — если регистрация успешна, 400 — если данные некорректны
+     */
     @Operation(
             summary = "Регистрация нового пользователя",
-            description = "Создает нового пользователя. Возвращает 201 при успешной регистрации, 400 — при ошибке.",
+            description = "Создает нового пользователя. Возвращает 201 при успешной регистрации и 400 при ошибке.",
             requestBody = @RequestBody(
                     description = "Данные для регистрации нового пользователя",
                     required = true,
@@ -39,11 +55,15 @@ public class RegisterController {
             }
     )
     @PostMapping("/register")
-    public ResponseEntity<Void> register(@org.springframework.web.bind.annotation.RequestBody RegisterDto register) {
+    public ResponseEntity<Void> register(
+            @org.springframework.web.bind.annotation.RequestBody RegisterDto register
+    ) {
         log.info("Попытка регистрации пользователя: username={}", register.getUsername());
+
         boolean success = authService.register(register);
+
         if (success) {
-            log.info("Регистрация прошла успешно: username={}", register.getUsername());
+            log.info("Регистрация успешна: username={}", register.getUsername());
             return ResponseEntity.status(HttpStatus.CREATED).build();
         } else {
             log.warn("Ошибка регистрации: username={}", register.getUsername());

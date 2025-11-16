@@ -13,6 +13,13 @@ import ru.skypro.homework.mappers.RegisterMapper;
 import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.auth.AuthService;
 
+/**
+ * Реализация сервиса {@link AuthService} для аутентификации и регистрации пользователей.
+ * <p>
+ * Обеспечивает проверку учетных данных пользователя при входе,
+ * а также создание новой учетной записи с проверкой корректности данных
+ * и уникальности email.
+ */
 @Slf4j
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -22,13 +29,34 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final RegisterMapper registerMapper;
 
-    public AuthServiceImpl(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder, UserRepository userRepository, RegisterMapper registerMapper) {
+    /**
+     * Конструктор сервиса.
+     *
+     * @param userDetailsService сервис получения данных пользователя для аутентификации
+     * @param passwordEncoder    компонент для шифрования паролей
+     * @param userRepository     репозиторий пользователей
+     * @param registerMapper     маппер DTO регистрации в сущность пользователя
+     */
+    public AuthServiceImpl(UserDetailsService userDetailsService,
+                           PasswordEncoder passwordEncoder,
+                           UserRepository userRepository,
+                           RegisterMapper registerMapper) {
         this.userDetailsService = userDetailsService;
         this.encoder = passwordEncoder;
         this.userRepository = userRepository;
         this.registerMapper = registerMapper;
     }
 
+    /**
+     * Выполняет проверку логина и пароля пользователя.
+     * <p>
+     * Метод ищет пользователя в системе и сравнивает переданный пароль с
+     * зашифрованным значением, хранящимся в базе.
+     *
+     * @param email    email пользователя (логин)
+     * @param password пароль пользователя
+     * @return {@code true}, если учетные данные корректны; {@code false} — иначе
+     */
     @Override
     public boolean login(String email, String password) {
         try {
@@ -39,20 +67,29 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    /**
+     * Регистрирует нового пользователя.
+     * <p>
+     * Проверяет уникальность email, корректность обязательных данных
+     * и устанавливает роль и зашифрованный пароль перед сохранением.
+     *
+     * @param registerDto данные для регистрации нового пользователя
+     * @return {@code true}, если регистрация прошла успешно; {@code false} — при ошибке
+     */
     @Override
     public boolean register(RegisterDto registerDto) {
-        // Проверяем по username (который станет email)
         String email = registerDto.getUsername();
 
         if (userRepository.findByEmail(email).isPresent()) {
-            log.warn("Попытка зарегистрировать уже существующего пользователя с email: {}", email);
+            log.warn("Попытка зарегистрировать уже существующего пользователя: {}", email);
             return false;
         }
 
-        // Проверка обязательных полей
-        if (registerDto.getFirstName() == null || registerDto.getLastName() == null || registerDto.getPhone() == null) {
-            log.error("Обязательные поля не заполнены для username: {}", email);
-            return false; // или бросьте исключение
+        if (registerDto.getFirstName() == null ||
+                registerDto.getLastName() == null ||
+                registerDto.getPhone() == null) {
+            log.error("Обязательные поля не заполнены для пользователя: {}", email);
+            return false;
         }
 
         try {
@@ -61,17 +98,17 @@ public class AuthServiceImpl implements AuthService {
                 try {
                     role = Role.valueOf(registerDto.getRole().toUpperCase());
                 } catch (IllegalArgumentException e) {
-                    log.warn("Некорректная роль: {}, установлена роль USER по умолчанию", registerDto.getRole());
+                    log.warn("Некорректная роль: {}. Установлена роль USER по умолчанию", registerDto.getRole());
                 }
             }
 
             User user = registerMapper.registerDtoToUser(registerDto);
-            // Установка роли и зашифрованного пароля
             user.setRole(role);
             user.setPassword(encoder.encode(registerDto.getPassword()));
 
             userRepository.save(user);
-            log.info("Пользователь успешно зарегистрирован с email: {} с ролью: {}", email, role);
+            log.info("Пользователь успешно зарегистрирован: {} с ролью: {}", email, role);
+
             return true;
 
         } catch (Exception e) {
@@ -80,3 +117,4 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 }
+

@@ -6,6 +6,20 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.servers.Server;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Конфигурация OpenAPI/Swagger для проекта.
+ *
+ * <p>Определяет:
+ * <ul>
+ *     <li>общую информацию о REST API (название, версия, описание);</li>
+ *     <li>настройки серверов (адреса, с которых доступен API);</li>
+ *     <li>группы тегов для Swagger UI для удобной навигации;</li>
+ * </ul>
+ *
+ * <p>Используется библиотекой <b>springdoc-openapi</b> для генерации Swagger UI
+ * по адресу:
+ * <pre>http://localhost:8080/swagger-ui/index.html</pre>
+ */
 @Configuration
 @OpenAPIDefinition(
         info = @Info(
